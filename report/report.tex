@@ -1,0 +1,97 @@
+\documentclass[9pt,twocolumn]{article}
+\usepackage[margin=0.52in,top=0.48in,bottom=0.48in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage[font=small,skip=2pt]{caption}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{balance}
+\usepackage[hidelinks]{hyperref}
+\setlength{\columnsep}{0.22in}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{1pt}
+\setlist{nosep,leftmargin=1.2em}
+\captionsetup{font=footnotesize,skip=2pt}
+\title{\vspace{-1.1em}\textbf{Thermal- and Energy-Aware CPU Scheduling with Preference-Conditioned Deep Q-Learning}\vspace{-0.6em}}
+\author{Gautam (B24CM1024)\\[-1pt]\small GitHub: \url{https://github.com/gautxmghugharwal/rl-energy-scheduler}}
+\date{}
+\begin{document}
+\maketitle
+\vspace{-2.0em}
+
+\begin{abstract}
+We formulate heterogeneous CPU scheduling as a reinforcement-learning problem in which a policy jointly chooses a waiting job, a core type, and a dynamic-voltage-and-frequency-scaling (DVFS) level. A custom simulator models uncertain job-size estimates, energy consumption, temperature-dependent leakage, and thermal throttling. A Double Deep Q-Network (Double DQN), implemented directly in NumPy, is evaluated against Round Robin (RR), Priority, and Shortest Job First (SJF) over six workload scenarios. The learned policy reduces energy and thermal throttling, but typically increases turnaround time.
+\end{abstract}
+
+\section{Problem and Environment}
+The simulator represents a heterogeneous four-core CPU with two high-performance (big) cores and two energy-efficient (LITTLE) cores. A dispatch selects one of three frequency levels, $f\in\{0.5,0.75,1.0\}$ relative to maximum frequency. Dynamic power is modelled as $P_{\rm dyn}=K_cf^3$; leakage increases with temperature, and a big core reaching $85^\circ$C is forced to its lowest frequency. The thermal state follows a first-order RC model. Jobs arrive through Poisson or bursty processes and have mixed or heavy-tailed service demands. The scheduler sees noisy burst estimates rather than true remaining work.
+
+\section{RL Formulation}
+\textbf{State.} The observation is a 65-dimensional vector. It contains five features for each core, five global context features (including queue/backlog, utilisation and energy preference), and five features for each of up to eight visible waiting jobs. The visible set combines older, shorter, and higher-priority jobs so that a long queue does not completely hide small or potentially starving jobs.
+
+\textbf{Action.} There are 48 discrete actions: choose one of eight visible job slots, one of two core types (big or LITTLE), and one of three frequency levels ($8\times2\times3=48$). Illegal actions are masked, including empty job slots or a core type with no free core. A dispatched job runs for a four-tick time slice, allowing preemption and migration.
+
+\textbf{Reward.} Each transition incurs the negative of a priority-weighted holding cost plus energy cost:
+\[
+ r_t=-\frac{1}{10}\sum_{\tau\in\mathcal T_t}\left[\sum_{j\in\mathcal S_\tau}\rho_j\left(1+0.25\frac{w_j}{\hat b_j+4}\right)+w_E P_\tau\right],
+\]
+where $\mathcal T_t$ is the set of ticks in the transition, $\mathcal S_\tau$ the jobs in the system, $\rho_j$ the priority weight, $w_j$ waiting time, $\hat b_j$ estimated burst, $P_\tau$ total power, and $w_E$ the energy preference. Lower accumulated cost (negative reward) is better; the waiting/size term discourages starvation.
+
+\section{Learning Method}
+The agent uses Double DQN with experience replay, Huber loss, Adam, a soft-updated target network, masked actions, and three-step returns. A shared per-job network scores each visible job from the system context, job features, and relative features; this permutation-equivariant design shares learning across queue positions. Potential-based reward shaping uses a weighted-shortest-processing-time (WSPT) scheduling potential during training. Workload load, arrival pattern, burst distribution, and energy preference are randomised during training. The best checkpoint is selected on held-out validation workloads; test workloads use separate seeds. The simulator, learning code, and baselines are implemented in Python/NumPy.
+
+\balance
+\section{Evaluation and Results}
+We evaluate at energy weight $w_E=4$ on six scenarios (light, medium, heavy, bursty, heavy-tail, and overload), with ten unseen seeds per scenario. RR, Priority, and SJF serve as classical baselines. Table~\ref{tab:cost} reports the lowest-cost classical baseline against DQN; the comparison plot shows all four policies.
+
+\begin{table}[!ht]
+\centering
+\caption{Evaluation cost; lower is better.}
+\label{tab:cost}
+\scriptsize
+\begin{tabular}{lrrl}
+\toprule
+Workload & Best base. & DQN & Winner\\
+\midrule
+Light & 1585 & 1368 & DQN\\
+Medium & 1654 & 1527 & DQN\\
+Heavy & 1996 & 1956 & DQN\\
+Bursty & 1670 & 1572 & DQN\\
+Heavy-tail & 580 & 533 & DQN\\
+Overload & 2312 & 2415 & SJF\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth,height=1.20in,keepaspectratio]{fig_comparison.png}
+\caption{Scheduler comparison across six workloads.}
+\label{fig:comparison}
+\end{figure}
+
+DQN achieves the lowest cost in five of six scenarios, improving on the best baseline by about 2.0--13.7\%. On the unseen overload workload, SJF is better (cost 2312 versus 2415), a 4.5\% gap. Compared with SJF, DQN uses 17.8--38.5\% less energy and experiences only 0.0--0.2\% thermal throttling, versus 8.5--19.6\% for SJF. Jain's fairness index is higher for DQN in all six scenarios (0.625--0.882 versus 0.562--0.712 for SJF). The trade-off is turnaround: DQN's mean turnaround is 10.1--64.6\% higher than SJF, consistent with the energy-weighted objective.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.82\linewidth,height=1.32in,keepaspectratio]{fig_pareto.png}
+\caption{Energy--turnaround trade-off.}
+\label{fig:pareto}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\linewidth,height=0.92in,keepaspectratio]{fig_policy.png}
+\caption{Analysis of learned scheduling choices.}
+\label{fig:policy}
+\end{figure}
+
+\textbf{Limitations.} The evaluation is simulation-based and uses one training seed; DQN does not win in the unseen overload case, and the energy-preference input appears to affect behaviour only weakly in these runs. Results therefore support an energy/thermal benefit in the tested scenarios, not a claim of universal scheduling superiority.
+
+\section*{References}
+\footnotesize
+[1] H. van Hasselt, A. Guez, and D. Silver, ``Deep Reinforcement Learning with Double Q-learning,'' \emph{AAAI}, 2016.\quad
+[2] A. Y. Ng, D. Harada, and S. Russell, ``Policy invariance under reward transformations: Theory and application to reward shaping,'' \emph{ICML}, 1999.
+
+\end{document}
