@@ -1,0 +1,21 @@
+ep   10  steps   10733  eps 0.89  return  -2318.2  val_cost  1744.4  best  1744.4  0.1 min
+ep   20  steps   20194  eps 0.76  return  -2723.6  val_cost  2105.3  best  1744.4  0.2 min
+ep   30  steps   33176  eps 0.64  return  -2530.9  val_cost  1905.0  best  1744.4  0.4 min
+ep   40  steps   43056  eps 0.51  return  -2068.1  val_cost  2065.9  best  1744.4  0.5 min
+ep   50  steps   53745  eps 0.39  return  -1794.6  val_cost  1981.0  best  1744.4  0.6 min
+ep   60  steps   63971  eps 0.26  return  -3264.6  val_cost  2087.4  best  1744.4  0.8 min
+ep   70  steps   79408  eps 0.14  return  -5664.7  val_cost  2372.5  best  1744.4  0.9 min
+ep   80  steps   90778  eps 0.05  return  -1405.7  val_cost  2808.9  best  1744.4  1.1 min
+ep   90  steps  101622  eps 0.05  return  -2326.4  val_cost  2386.5  best  1744.4  1.2 min
+ep  100  steps  118258  eps 0.05  return  -3415.5  val_cost  2807.4  best  1744.4  1.4 min
+ep  110  steps  130782  eps 0.05  return  -1240.3  val_cost  2439.6  best  1744.4  1.6 min
+ep  120  steps  140437  eps 0.05  return   -659.8  val_cost  2404.4  best  1744.4  1.7 min
+ep  130  steps  154364  eps 0.05  return  -1821.4  val_cost  2069.8  best  1744.4  1.9 min
+ep  140  steps  166153  eps 0.05  return  -4912.9  val_cost  2730.7  best  1744.4  2.0 min
+ep  150  steps  178541  eps 0.05  return  -2643.7  val_cost  3455.4  best  1744.4  2.2 min
+ep  160  steps  188689  eps 0.05  return  -1277.8  val_cost  2456.1  best  1744.4  2.3 min
+ep  170  steps  203585  eps 0.05  return  -4344.3  val_cost  3243.3  best  1744.4  2.5 min
+ep  180  steps  218758  eps 0.05  return  -2160.8  val_cost  2863.8  best  1744.4  2.7 min
+ep  190  steps  230586  eps 0.05  return  -3864.3  val_cost  2834.3  best  1744.4  2.9 min
+ep  200  steps  245131  eps 0.05  return  -4485.5  val_cost  3211.2  best  1744.4  3.1 min
+saved best model (val cost 1744.4) to models/dqn_seed0.npz
