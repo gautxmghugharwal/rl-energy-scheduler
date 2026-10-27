@@ -121,7 +121,7 @@ Test set: 10 unseen workloads per scenario, energy weight `w_E = 4`. Cost is the
   - Potential-based reward shaping with the WSPT potential plus 3-step returns is what beats SJF.
 
 **Limitations (honest):**
-- DQN training was unstable. The best validation checkpoint came at episode 10, and later checkpoints got worse, so the run was stopped at episode 80. The model is chosen by validation cost from a single seed. A full 200-episode `python train.py --seed 0` reproduces the same run (seeded, single-threaded) and replaces the checkpoint only if a later one scores better on validation.
+- Training and checkpoint selection: The submitted model was generated using python train.py --seed 0 with the default 200 training episodes. The checkpoint models/dqn_seed0.npz is selected using held-out validation cost, so it may correspond to an earlier episode rather than the final episode. Results are based on one training seed, and performance may vary across seeds.
 - The energy-preference input `w_E` has only a weak effect on the learned policy (turnaround 29–33, energy 1986–2113 for `w_E` = 0…12).
 - All results come from simulation.
 
